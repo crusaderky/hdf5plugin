@@ -201,7 +201,16 @@ class Blosc(FilterBase):
             raise ValueError("clevel must be in the range [0, 9]")
         if shuffle not in (self.NOSHUFFLE, self.SHUFFLE, self.BITSHUFFLE):
             raise ValueError(f"shuffle={shuffle} is not supported")
-        self.filter_options = (0, 0, 0, 0, clevel, shuffle, compression)
+
+        # FIXME normally, you can leave the first 4 fields uninitialized;
+        # the set_local callback in hdf5-blosc will set them properly.
+        # However, this causes a crash for variable-width strings:
+        # https://github.com/HDFGroup/hdf5/issues/5942
+        # Note how this is not a hdf5-blosc bug, but a libhdf5 one.
+        # This workaround hardcodes sane values for such use case;
+        # they will be ignored otherwise.
+        # self.filter_options = (0, 0, 0, 0, clevel, shuffle, compression)
+        self.filter_options = (2, 2, 1, 0, clevel, shuffle, compression)
 
 
 class Blosc2(FilterBase):
